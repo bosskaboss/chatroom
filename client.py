@@ -1,9 +1,9 @@
 import socket
-
+import threading
 
 HEADER = 64
-PORT = 5060
-SERVER = "100.117.14.138"
+PORT = 5050
+SERVER = socket.gethostbyname(socket.gethostname())
 FORMAT = "utf-8"
 DIS = "!DIS"
 ADDR = (SERVER,PORT)
@@ -19,10 +19,27 @@ def send(msg):
     send_length+= b' ' * (HEADER - len(send_length))
     client.send(send_length)
     client.send(message)
-    print(client.recv(2048).decode(FORMAT))
+
+def receive():
+    while True:
+        try:
+            msg = client.recv(2048).decode(FORMAT)
+            if msg:
+                print(msg)
+        except:
+            print("Disconnected from server.")
+            break
 
 
-while 1 :
-    textBox =  input("What to send:")
-    send(textBox)
+threading.Thread(target=receive, daemon=True).start()
+
+print("You can start typing messages (type !DIS to disconnect):")
+while True:
+    msg = input()
+    send(msg)
+    if msg == DIS:
+        break
+
+client.close()
+
 
