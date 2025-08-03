@@ -1,22 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import io from 'socket.io-client';
 import AskQuestionModal from '../components/AskQuestionModal';
 import QuestionCard from '../components/QuestionCard';
+
+const socket = io('http://localhost:4000'); // change to your server URL in prod
 
 export default function Chatroom() {
   const { code } = useParams();
   const [questions, setQuestions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
 
+  useEffect(() => {
+    socket.emit('join_lecture', code);
+
+    socket.on('init_questions', (initialQs) => {
+      setQuestions(initialQs);
+    });
+
+    socket.on('new_question', (question) => {
+      setQuestions((prev) => [question, ...prev]);
+    });
+
+    socket.on('question_upvoted', ({ id, votes }) => {
+      setQuestions(prev =>
+        prev.map(q => (q.id === id ? { ...q, votes } : q))
+      );
+    });
+
+    return () => {
+      socket.off('init_questions');
+      socket.off('new_question');
+      socket.off('question_upvoted');
+    };
+  }, [code]);
+
   const addQuestion = (text) => {
-    const newQuestion = { id: Date.now().toString(), text, votes: 0 };
-    setQuestions([newQuestion, ...questions]);
+    socket.emit('ask_question', { code, text });
   };
 
   const upvote = (id) => {
-    setQuestions(
-      questions.map((q) => (q.id === id ? { ...q, votes: q.votes + 1 } : q))
-    );
+    socket.emit('upvote', { code, id });
   };
 
   return (
