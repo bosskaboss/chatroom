@@ -1,0 +1,41 @@
+.join-lecture-container {
+  padding: 20px;
+  max-width: 400px;
+  margin: 40px auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f7f8fc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.join-lecture-container h2 {
+  color: #4b0082;
+  margin-bottom: 20px;
+}
+
+.join-lecture-input {
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.join-lecture-button {
+  background-color: #4b0082;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s ease;
+}
+
+.join-lecture-button:hover {
+  background-color: #5e2ca5;
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
 
 import JoinLecture from './pages/JoinLecture';
 import Chatroom from './pages/Chatroom';
@@ -9,7 +10,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<JoinLecture />} />
-        <Route path="/chat/:code" element={<Chatroom />} />
+        <Route path="/chat/:code/:slidenumber" element={<Chatroom />} />
       </Routes>
     </BrowserRouter>
   );

@@ -14,43 +14,39 @@ const io = new Server(server, {
   }
 });
 
-// Store questions per lecture code
 const lectureRooms = {};
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  socket.on('join_lecture', (code) => {
-    socket.join(code);
-    console.log(`Socket ${socket.id} joined lecture ${code}`);
+  socket.on('join_lecture', ({ code, slideNumber }) => {
+    socket.join(`${code}-${slideNumber}`);
+    console.log(`Socket ${socket.id} joined lecture ${code} slide ${slideNumber}`);
 
-    // Send existing questions to the new user
-    const questions = lectureRooms[code] || [];
+    const questions = lectureRooms[code]?.[slideNumber] || [];
     socket.emit('init_questions', questions);
   });
 
-  socket.on('ask_question', ({ code, text }) => {
+  socket.on('ask_question', ({ code, slideNumber, text }) => {
     const question = {
       id: Date.now().toString(),
       text,
       votes: 0
     };
 
-    if (!lectureRooms[code]) {
-      lectureRooms[code] = [];
-    }
+    if (!lectureRooms[code]) lectureRooms[code] = {};
+    if (!lectureRooms[code][slideNumber]) lectureRooms[code][slideNumber] = [];
 
-    lectureRooms[code].unshift(question);
-
-    io.to(code).emit('new_question', question); // Broadcast to everyone
+    lectureRooms[code][slideNumber].unshift(question);
+    io.to(`${code}-${slideNumber}`).emit('new_question', question);
   });
 
-  socket.on('upvote', ({ code, id }) => {
-    const questions = lectureRooms[code] || [];
+  socket.on('upvote', ({ code, slideNumber, id }) => {
+    const questions = lectureRooms[code]?.[slideNumber] || [];
     const q = questions.find(q => q.id === id);
     if (q) {
       q.votes += 1;
-      io.to(code).emit('question_upvoted', { id, votes: q.votes });
+      io.to(`${code}-${slideNumber}`).emit('question_upvoted', { id, votes: q.votes });
     }
   });
 

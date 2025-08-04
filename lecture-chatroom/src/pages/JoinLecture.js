@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './JoinLecture.css';
 
 export default function JoinLecture() {
   const [code, setCode] = useState('');
@@ -7,22 +8,21 @@ export default function JoinLecture() {
 
   const joinLecture = () => {
     if (code.trim()) {
-      navigate(`/chat/${code.trim()}`);
+      navigate(`/chat/${code.trim()}/1`);
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="join-lecture-container">
       <h2>Enter Lecture Code</h2>
       <input
         type="text"
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder="ABC123"
-        style={{ padding: 10, fontSize: 16, marginBottom: 10 }}
+        className="join-lecture-input"
       />
-      <br />
-      <button onClick={joinLecture} style={{ padding: '10px 20px', fontSize: 16 }}>
+      <button onClick={joinLecture} className="join-lecture-button">
         Join
       </button>
     </div>
