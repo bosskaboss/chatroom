@@ -1,52 +1,72 @@
 const express = require('express');
 const http = require('http');
-const cors = require('cors');
 const { Server } = require('socket.io');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
-app.use(cors());
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', // Allow all for development
+    origin: '*', // In production, change this to your frontend domain
     methods: ['GET', 'POST']
   }
 });
 
-// Store questions per lecture code
-const lectureRooms = {};
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ------------------ Multer Upload ------------------
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('slide'), (req, res) => {
+  const file = req.file;
+  const lectureCode = req.body;
+  console.log(req.body);
+  if (!file) return res.status(400).send('No file uploaded');
+
+  const ext = path.extname(file.originalname);
+  if (ext !== '.pdf') {
+    return res.status(400).send('Only PDF files are supported for now');
+  }
+
+  res.send({ message: 'File uploaded successfully' });
+});
+
+const lectures = {};
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('A user connected');
 
   socket.on('join_lecture', (code) => {
     socket.join(code);
-    console.log(`Socket ${socket.id} joined lecture ${code}`);
-
-    // Send existing questions to the new user
-    const questions = lectureRooms[code] || [];
-    socket.emit('init_questions', questions);
+    if (!lectures[code]) lectures[code] = [];
+    socket.emit('init_questions', lectures[code]);
   });
 
   socket.on('ask_question', ({ code, text }) => {
-    const question = {
+    const newQuestion = {
       id: Date.now().toString(),
       text,
-      votes: 0
+      votes: 0,
     };
-
-    if (!lectureRooms[code]) {
-      lectureRooms[code] = [];
-    }
-
-    lectureRooms[code].unshift(question);
-
-    io.to(code).emit('new_question', question); // Broadcast to everyone
+    lectures[code].unshift(newQuestion);
+    io.to(code).emit('new_question', newQuestion);
   });
 
   socket.on('upvote', ({ code, id }) => {
-    const questions = lectureRooms[code] || [];
+    const questions = lectures[code];
     const q = questions.find(q => q.id === id);
     if (q) {
       q.votes += 1;
@@ -55,10 +75,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('A user disconnected');
   });
 });
 
 server.listen(4000, () => {
-  console.log('Server listening on port 4000');
+  console.log('Server running on http://localhost:4000');
 });
